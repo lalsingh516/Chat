@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>SecureChat</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- 1. Authentication View -->
+    <div id="auth-view" class="view active">
+        <div class="auth-container">
+            <h2><i class="fas fa-shield-alt"></i> SecureChat</h2>
+            <p>End-to-End Encrypted. Private.</p>
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Password">
+            <button id="btn-login" class="primary-btn">Login</button>
+            <button id="btn-signup" class="secondary-btn">Sign Up</button>
+            <p id="auth-error" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- 2. Profile Setup View -->
+    <div id="profile-setup-view" class="view">
+        <div class="header">
+            <h3>Setup Profile</h3>
+        </div>
+        <div class="profile-form">
+            <div class="avatar-upload">
+                <img id="setup-avatar-preview" src="https://via.placeholder.com/150" alt="Profile">
+                <label for="setup-avatar-input"><i class="fas fa-camera"></i></label>
+                <input type="file" id="setup-avatar-input" accept="image/*" hidden>
+            </div>
+            <input type="text" id="setup-name" placeholder="Display Name">
+            <textarea id="setup-bio" placeholder="Bio / About" rows="3"></textarea>
+            <button id="btn-save-profile" class="primary-btn">Save Profile</button>
+        </div>
+    </div>
+
+    <!-- 3. Chat List View -->
+    <div id="chat-list-view" class="view">
+        <div class="header sticky">
+            <div class="user-nav" id="my-profile-trigger">
+                <img id="nav-avatar" src="" alt="">
+                <span class="status-dot online"></span>
+            </div>
+            <div class="actions">
+                <i class="fas fa-plus-circle" id="btn-new-chat" title="New Chat"></i>
+                <i class="fas fa-sign-out-alt" id="btn-logout" title="Logout"></i>
+            </div>
+        </div>
+        <div id="chats-container" class="scrollable">
+            <!-- Chats loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- 4. Chat Room View -->
+    <div id="chat-room-view" class="view">
+        <div class="header sticky chat-header">
+            <i class="fas fa-arrow-left" id="btn-back"></i>
+            <div class="chat-info" id="chat-header-info">
+                <img id="chat-avatar" src="" alt="">
+                <div class="details">
+                    <h4 id="chat-name">User</h4>
+                    <span id="chat-status">Offline</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="messages-container" class="scrollable messages-area">
+            <!-- Messages loaded dynamically -->
+        </div>
+
+        <div class="input-area">
+            <label for="media-input" class="attach-btn"><i class="fas fa-paperclip"></i></label>
+            <input type="file" id="media-input" accept="image/*" hidden>
+            <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+            <button id="btn-send"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- MODAL: Other User Profile -->
+    <div id="user-profile-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <img id="modal-avatar" src="" class="large-avatar">
+            <h3 id="modal-name"></h3>
+            <p id="modal-email" class="sub-text"></p>
+            <div class="bio-box">
+                <p id="modal-bio"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Secret Key Entry -->
+    <div id="secret-key-modal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-key"></i> Chat Security</h3>
+            <p style="font-size:12px; color:#666;">Enter the shared secret passphrase for this chat.</p>
+            <input type="password" id="chat-secret-input" placeholder="Passphrase">
+            <button id="btn-confirm-secret" class="primary-btn">Unlock Chat</button>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
