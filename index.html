@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chat App Pro</title>
+  <style>
+    :root {
+      --bg-main: #121212;
+      --bg-panel: #1e1e1e;
+      --bg-input: #2c2c2c;
+      --primary: #0a7cff;
+      --primary-hover: #0066d6;
+      --text-main: #ffffff;
+      --text-muted: #aaaaaa;
+      --bubble-sent: #0a7cff;
+      --bubble-received: #333333;
+      --danger: #ff453a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body {
+      background-color: #000;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Mobile Container */
+    #app {
+      width: 100%;
+      max-width: 400px;
+      height: 100%;
+      background-color: var(--bg-main);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .screen { display: none; flex-direction: column; height: 100%; }
+    .screen.active { display: flex; }
+
+    /* UI Elements */
+    header {
+      background: var(--bg-panel);
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .header-title { font-weight: bold; font-size: 1.1rem; }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: var(--bg-input);
+      color: white;
+      margin-bottom: 10px;
+    }
+    input:focus { outline: 1px solid var(--primary); }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #333; }
+    .btn-secondary:hover { background: #444; }
+
+    /* Auth Screen */
+    .auth-container { padding: 30px 20px; display: flex; flex-direction: column; gap: 10px; justify-content: center; flex: 1; }
+    .auth-container h1 { text-align: center; margin-bottom: 30px; font-size: 2rem; }
+    .divider { text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Main Screen Sections */
+    .dashboard-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; }
+    .section-title { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .card { background: var(--bg-panel); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .card-info { display: flex; flex-direction: column; }
+    .card-name { font-weight: bold; margin-bottom: 4px; }
+    .card-sub { font-size: 0.8rem; color: var(--text-muted); }
+    .online-dot { width: 8px; height: 8px; background: #32d74b; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+    /* Add Friend Area */
+    .add-friend-wrapper { display: flex; gap: 10px; }
+    .add-friend-wrapper input { margin: 0; flex: 1; }
+
+    /* Chat Screen */
+    #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .message { max-width: 75%; padding: 10px 14px; border-radius: 18px; position: relative; word-wrap: break-word; }
+    .message.sent { background: var(--bubble-sent); align-self: flex-end; border-bottom-right-radius: 4px; }
+    .message.received { background: var(--bubble-received); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .message img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
+    .timestamp { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-align: right; margin-top: 4px; display: block; }
+
+    .chat-input-area {
+      padding: 10px 15px;
+      background: var(--bg-panel);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chat-input-area input[type="text"] { margin: 0; flex: 1; border-radius: 20px; }
+    .icon-btn { background: transparent; padding: 8px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
+    .icon-btn:hover { background: #333; }
+    #image-upload { display: none; }
+
+    /* Utils */
+    .hidden { display: none !important; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    
+    <!-- 1. LOGIN SCREEN -->
+    <div id="screen-login" class="screen active">
+      <div class="auth-container">
+        <h1>Chat App Pro</h1>
+        
+        <input type="email" id="auth-email" placeholder="Email">
+        <input type="password" id="auth-pass" placeholder="Password">
+        <button id="btn-email-login">Login</button>
+        <button id="btn-email-signup" class="btn-secondary">Sign Up</button>
+        
+        <div class="divider">OR</div>
+        
+        <button id="btn-google">Continue with Google</button>
+        <button id="btn-anon" class="btn-secondary" style="margin-top:10px;">Guest / Anonymous</button>
+      </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD SCREEN -->
+    <div id="screen-main" class="screen">
+      <header>
+        <div class="header-title">Chat Pro</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="my-user-id" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+          <button id="btn-logout" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content">
+        <!-- Add Friend -->
+        <div>
+          <div class="section-title">Add Friend</div>
+          <div class="add-friend-wrapper">
+            <input type="text" id="add-friend-input" placeholder="User ID (e.g. ar-xxxx)">
+            <button id="btn-add-friend">Add</button>
+          </div>
+        </div>
+
+        <!-- Requests Panel -->
+        <div id="requests-panel" class="hidden">
+          <div class="section-title">Friend Requests</div>
+          <div id="requests-list"></div>
+        </div>
+
+        <!-- Contacts List -->
+        <div>
+          <div class="section-title">Contacts</div>
+          <div id="contacts-list">
+            <div class="card-sub" style="text-align: center; margin-top: 20px;">No contacts yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CHAT SCREEN -->
+    <div id="screen-chat" class="screen">
+      <header>
+        <button id="btn-back" class="icon-btn" style="margin-right: 10px;">←</button>
+        <div class="header-title" id="chat-friend-name" style="flex:1;">Friend</div>
+        <div id="chat-friend-status" class="card-sub">Offline</div>
+      </header>
+
+      <div id="chat-messages"></div>
+
+      <div class="chat-input-area">
+        <label for="image-upload" class="icon-btn" style="cursor: pointer;">📷</label>
+        <input type="file" id="image-upload" accept="image/*">
+        <input type="text" id="chat-input" placeholder="Message..." autocomplete="off">
+        <button id="btn-send" class="icon-btn">➤</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FIREBASE & APP LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { 
+      getAuth, signInAnonymously, signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, 
+      onAuthStateChanged, signOut 
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { 
+      getDatabase, ref, set, push, onValue, onDisconnect, 
+      get, child, remove, query, orderByChild, equalTo, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    // ==========================================
+    // 1. FIREBASE CONFIGURATION
+    // REPLACE THIS WITH YOUR FIREBASE CONFIG
+    // ==========================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyDXsrr2kaWH3DmXcS1KfCbrbLiZTNNYc1M",
+  authDomain: "chat-app-pro-c0353.firebaseapp.com",
+  databaseURL: "https://chat-app-pro-c0353-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chat-app-pro-c0353",
+  storageBucket: "chat-app-pro-c0353.firebasestorage.app",
+  messagingSenderId: "973714613853",
+  appId: "1:973714613853:web:eae17ca2d725df73814fb4"
+};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // ==========================================
+    // 2. APP STATE & DOM ELEMENTS
+    // ==========================================
+    let currentUser = null;
+    let myData = null; // { name, userId }
+    let currentChatId = null;
+    let currentFriendId = null;
+    let activeChatListener = null;
+    let activeStatusListener = null;
+
+    const screens = {
+      login: document.getElementById('screen-login'),
+      main: document.getElementById('screen-main'),
+      chat: document.getElementById('screen-chat')
+    };
+
+    function showScreen(screenName) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[screenName].classList.add('active');
+    }
+
+    // ==========================================
+    // 3. AUTHENTICATION LOGIC
+    // ==========================================
+    document.getElementById('btn-anon').onclick = () => signInAnonymously(auth);
+    document.getElementById('btn-google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+    
+    document.getElementById('btn-email-login').onclick = () => {
+      const e = document.getElementById('auth-email').value;
+      const p = document.getElementById('auth-pass').value;
+      if(e && p) signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
+    };
+
+    document.getElementById('btn-email-signup').onclick = () => {
+      const e = document.getElementById('auth-email').value;
+      const p = document.getElementById('auth-pass').value;
+      if(e && p) createUserWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
+    };
+
+    document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const userRef = ref(db, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        
+        if (!snapshot.exists()) {
+          // Generate new user profile
+          const generatedId = 'ar-' + Math.floor(1000 + Math.random() * 9000);
+          const generatedName = 'User ' + Math.floor(1000 + Math.random() * 9000);
+          myData = { userId: generatedId, name: generatedName };
+          await set(userRef, myData);
+        } else {
+          myData = snapshot.val();
+        }
+
+        document.getElementById('my-user-id').innerText = `ID: ${myData.userId}`;
+        setupPresence(user.uid);
+        initDashboard();
+        showScreen('main');
+      } else {
+        currentUser = null;
+        myData = null;
+        showScreen('login');
+      }
+    });
+
+    // ==========================================
+    // 4. PRESENCE SYSTEM
+    // ==========================================
+    function setupPresence(uid) {
+      const myStatusRef = ref(db, `status/${uid}`);
+      const connectedRef = ref(db, '.info/connected');
+      
+      onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+          set(myStatusRef, { online: true });
+          onDisconnect(myStatusRef).set({ online: false });
+        }
+      });
+    }
+
+    // ==========================================
+    // 5. MAIN DASHBOARD (Requests & Contacts)
+    // ==========================================
+    function initDashboard() {
+      // Listen to Incoming Requests
+      const requestsRef = ref(db, `requests/${currentUser.uid}`);
+      onValue(requestsRef, (snapshot) => {
+        const reqPanel = document.getElementById('requests-panel');
+        const reqList = document.getElementById('requests-list');
+        reqList.innerHTML = '';
+        
+        if (snapshot.exists()) {
+          reqPanel.classList.remove('hidden');
+          snapshot.forEach((childSnap) => {
+            const reqUid = childSnap.key;
+            const reqData = childSnap.val();
+            
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+              <div class="card-info">
+                <span class="card-name">${reqData.name}</span>
+                <span class="card-sub">Wants to connect</span>
+              </div>
+              <button style="padding: 6px 12px; font-size: 0.8rem;">Accept</button>
+            `;
+            div.querySelector('button').onclick = () => acceptRequest(reqUid, reqData.name);
+            reqList.appendChild(div);
+          });
+        } else {
+          reqPanel.classList.add('hidden');
+        }
+      });
+
+      // Listen to Contacts
+      const contactsRef = ref(db, `contacts/${currentUser.uid}`);
+      onValue(contactsRef, (snapshot) => {
+        const contactsList = document.getElementById('contacts-list');
+        contactsList.innerHTML = '';
+        
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnap) => {
+            const friendUid = childSnap.key;
+            const friendData = childSnap.val();
+            
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.style.cursor = 'pointer';
+            div.innerHTML = `
+              <div class="card-info">
+                <span class="card-name">${friendData.name}</span>
+              </div>
+              <span class="card-sub">Chat ➤</span>
+            `;
+            div.onclick = () => openChat(friendUid, friendData);
+            contactsList.appendChild(div);
+          });
+        } else {
+          contactsList.innerHTML = '<div class="card-sub" style="text-align: center; margin-top: 20px;">No contacts yet. Add someone!</div>';
+        }
+      });
+    }
+
+    // Add Friend Logic
+    document.getElementById('btn-add-friend').onclick = async () => {
+      const targetUserId = document.getElementById('add-friend-input').value.trim();
+      if(!targetUserId) return;
+      if(targetUserId === myData.userId) return alert("You cannot add yourself.");
+
+      const usersRef = ref(db, 'users');
+      const q = query(usersRef, orderByChild('userId'), equalTo(targetUserId));
+      const snapshot = await get(q);
+      
+      if(snapshot.exists()) {
+        const targetUid = Object.keys(snapshot.val())[0];
+        
+        // Send request
+        await set(ref(db, `requests/${targetUid}/${currentUser.uid}`), {
+          name: myData.name
+        });
+        alert('Friend request sent!');
+        document.getElementById('add-friend-input').value = '';
+      } else {
+        alert('User ID not found.');
+      }
+    };
+
+    // Accept Request Logic
+    async function acceptRequest(requesterUid, requesterName) {
+      // Create unique Chat ID
+      const chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      
+      // Save to both contacts
+      await set(ref(db, `contacts/${currentUser.uid}/${requesterUid}`), { name: requesterName, chatId });
+      await set(ref(db, `contacts/${requesterUid}/${currentUser.uid}`), { name: myData.name, chatId });
+      
+      // Delete request
+      await remove(ref(db, `requests/${currentUser.uid}/${requesterUid}`));
+    }
+
+    // ==========================================
+    // 6. CHAT SYSTEM
+    // ==========================================
+    function openChat(friendUid, friendData) {
+      currentChatId = friendData.chatId;
+      currentFriendId = friendUid;
+      document.getElementById('chat-friend-name').innerText = friendData.name;
+      
+      // Setup Friend Presence Listener
+      if(activeStatusListener) activeStatusListener(); // cleanup previous
+      const friendStatusRef = ref(db, `status/${friendUid}`);
+      activeStatusListener = onValue(friendStatusRef, (snap) => {
+        const statusEl = document.getElementById('chat-friend-status');
+        if(snap.exists() && snap.val().online) {
+          statusEl.innerHTML = '<span class="online-dot"></span>Online';
+        } else {
+          statusEl.innerHTML = 'Offline';
+        }
+      });
+
+      // Setup Message Listener
+      const messagesRef = ref(db, `messages/${currentChatId}`);
+      const chatContainer = document.getElementById('chat-messages');
+      chatContainer.innerHTML = ''; // clear old
+
+      if(activeChatListener) activeChatListener(); // cleanup
+      
+      activeChatListener = onValue(messagesRef, (snapshot) => {
+        chatContainer.innerHTML = '';
+        if(snapshot.exists()) {
+          snapshot.forEach((childSnap) => {
+            const msg = childSnap.val();
+            renderMessage(msg);
+          });
+          chatContainer.scrollTop = chatContainer.scrollHeight; // Auto-scroll
+        }
+      });
+
+      showScreen('chat');
+    }
+
+    document.getElementById('btn-back').onclick = () => {
+      currentChatId = null;
+      if(activeChatListener) activeChatListener();
+      if(activeStatusListener) activeStatusListener();
+      showScreen('main');
+    };
+
+    function renderMessage(msg) {
+      const isMe = msg.sender === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = `message ${isMe ? 'sent' : 'received'}`;
+      
+      const timeString = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+
+      if (msg.type === 'image') {
+        div.innerHTML = `<img src="${msg.content}" alt="Image"><span class="timestamp">${timeString}</span>`;
+      } else {
+        div.innerHTML = `<span>${msg.content}</span><span class="timestamp">${timeString}</span>`;
+      }
+      
+      document.getElementById('chat-messages').appendChild(div);
+    }
+
+    // Send Text Message
+    async function sendMessage(content, type = 'text') {
+      if(!content.trim() || !currentChatId) return;
+      const messagesRef = ref(db, `messages/${currentChatId}`);
+      await push(messagesRef, {
+        sender: currentUser.uid,
+        type: type,
+        content: content,
+        timestamp: serverTimestamp()
+      });
+      document.getElementById('chat-input').value = '';
+    }
+
+    document.getElementById('btn-send').onclick = () => sendMessage(document.getElementById('chat-input').value);
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage(e.target.value);
+    });
+
+    // Send Image Message (Canvas Compression to Base64)
+    document.getElementById('image-upload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 600; // Compress size
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          const base64 = canvas.toDataURL('image/jpeg', 0.6); // 60% quality
+          sendMessage(base64, 'image');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // Reset input
+    });
+
+  </script>
+</body>
+</html>
